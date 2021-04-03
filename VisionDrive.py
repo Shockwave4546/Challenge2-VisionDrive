@@ -102,8 +102,8 @@ _x1 = 0
 _x2 = 639
 #_y1 = 100
 #_y2 = 140
-_y1 = 40
-_y2 = 140
+_y1 = 140
+_y2 = 240
 _mask_p1 = (_x1, _y1)
 _mask_p2 = (_x2, _y2)
 #
@@ -128,8 +128,8 @@ _maxboxwidth = _center_ledge
 cond = threading.Condition()
 notified = [False]
 #
-default_drive_speed = 0.4
-min_drive_speed = 0.30
+default_drive_speed = 0.2
+min_drive_speed = 0.1
 #
 # 
 # Main routine starts here
@@ -172,7 +172,7 @@ while True:
     cv2.imshow("Camera", frame)
     # cv2.imshow("OutTrack", processedframe)
     
-    if (_old_lostsight > 10):
+    if (_old_lostsight > 40):
         _stop = True
 
     # print(cv2.boundingRect(processedframe))
@@ -192,18 +192,18 @@ while True:
         if (linecenter < _center_ledge):
             # print("Go Left")
             # lr = -1 * ((_center_ledge - linecenter) / _center)
-            lr = (_old_x / _center_ledge) -1
+            lr = ((_old_x / _center_ledge) -1) * 0.15
             # targetc is used for speed modifier calculation
             targetc = -1 * ((_center_ledge - linecenter) / _center)
 
-            speed = 0.2
+            speed = 0.065
         if (linecenter > _center_redge):
             # print("Go Right")
             # lr = (linecenter - _center_redge) / _center
-            lr = ((_old_x + _old_w) - _center_redge) / _center
+            lr = (((_old_x + _old_w) - _center_redge) / _center) * 0.15
             # targetc is used for speed modifier calculation
             targetc = (linecenter - _center_redge) / _center 
-            speed = 0.2
+            speed = 0.065
         #
         # Speed = default speed + 5% modifier from line distance from target center - 25% modifier due to "target/line width"
         # Target Modifier = targetbox_width/maxboxsize
@@ -214,7 +214,8 @@ while True:
         #if speed < min_drive_speed:
         #    speed = min_drive_speed
 
-        if (_old_w > (3 * _trackwidth)):
+        #if (_old_w > (1.5 * _trackwidth)):
+        if True:
             _quickturn = True
         else:
             _quickturn = False
@@ -230,6 +231,7 @@ while True:
     else:
         x.putNumber("Forward Speed", 0.0)
         x.putNumber("Left-Right", 0.0)
+        x.putBoolean("QuickTurn", _quickturn)
         x.putBoolean("Stop", _stop)
 
     if cv2.waitKey(1) == ord('q'):
