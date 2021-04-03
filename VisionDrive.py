@@ -90,7 +90,7 @@ def process(im):
 # Camera Port #
 _portnum = 0
 # Live or Dev
-_dev = False
+_dev = True
 #
 # Thresholding a HSV to isolated Black Lines only - value is 'dialed' in already but might needed additional tuning once deployed to robot/pi
 _hsv_threshold_hue = [0.0, 180.0]
