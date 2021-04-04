@@ -17,6 +17,7 @@ def dupImageByColor(in_frame, hue, sat, val, torg, t):
     out_img = cv2.cvtColor(in_frame, cv2.COLOR_BGR2HSV)
     #
     out_img = cv2.inRange(out_img, (hue[0], sat[0], val[0]),  (hue[1], sat[1], val[1]))
+    out_img = cv2.blur(out_img, (3, 3))
     #
     # masking out the area that we wanted by just taking an entire slice of the area and leave it in the 'out' image
     #out_img = out_img[_y1:_y2, _x1:_x2]
@@ -157,8 +158,8 @@ _x1 = 0
 _x2 = 639
 #_y1 = 100
 #_y2 = 140
-_y1 = 140
-_y2 = 240
+_y1 = 120
+_y2 = 220
 _mask_p1 = (_x1, _y1)
 _mask_p2 = (_x2, _y2)
 #
@@ -292,7 +293,7 @@ while True:
 
     # cv2.imshow("OutTrack", processedframe)
     
-    if (_old_lostsight > 40):
+    if (_old_lostsight > 50):
         _stop = True
 
     # print(cv2.boundingRect(processedframe))
@@ -308,22 +309,23 @@ while True:
             lr = 0
             # targetc is used for speed modifier calculation
             targetc = 0
-            speed = default_drive_speed
+            # speed = default_drive_speed
+            speed = 0.10
         if (linecenter < _center_ledge):
             # print("Go Left")
-            # lr = -1 * ((_center_ledge - linecenter) / _center)
+            # lr = -1 * q((_center_ledge - linecenter) / _center)
             lr = ((_old_x / _center_ledge) -1) * 0.15
             # targetc is used for speed modifier calculation
             targetc = -1 * ((_center_ledge - linecenter) / _center)
 
-            speed = 0.065
+            speed = 0.10
         if (linecenter > _center_redge):
             # print("Go Right")
             # lr = (linecenter - _center_redge) / _center
             lr = (((_old_x + _old_w) - _center_redge) / _center) * 0.15
             # targetc is used for speed modifier calculation
             targetc = (linecenter - _center_redge) / _center 
-            speed = 0.065
+            speed = 0.10
         #
         # Speed = default speed + 5% modifier from line distance from target center - 25% modifier due to "target/line width"
         # Target Modifier = targetbox_width/maxboxsize
