@@ -1,8 +1,10 @@
+from cscore import CameraServer
 from cv2 import cv2
 import numpy
 import math
 import threading
 import time
+import json
 from networktables import NetworkTables
 
 # Callback function for whenever NetworkTables connect/disconnect
@@ -191,17 +193,31 @@ min_drive_speed = 0.1
 # Main routine starts here
 #
 # Let's start up the camera 1st
-if (_dev):
-    # Use Portnum for Webcam testing
-    camera = cv2.VideoCapture(_portnum)
-else:
-    # Use the camera stream from the ROMI/PI for Live Run
-    camera = cv2.VideoCapture("http://10.45.46.2:1181/stream.mjpg")
+#if (_dev):
+#    # Use Portnum for Webcam testing
+#    camera = cv2.VideoCapture(_portnum)
+#else:
+#    # Use the camera stream from the ROMI/PI for Live Run
+#    camera = cv2.VideoCapture("http://10.45.46.2:1181/stream.mjpg")
 #
 # Setup and Established NetworkTable connection
-NetworkTables.initialize('127.0.0.1')
-#NetworkTables.startClient('127.0.0.1')
+#NetworkTables.initialize('127.0.0.1')
+NetworkTables.startClient('10.45.46.120')
 NetworkTables.addConnectionListener(connectionListener, immediateNotify=True)
+
+# Setup camera on the Pi
+with open('/boot/frc.json') as f:
+    config = json.load(f)
+camera = config['cameras'][0]
+
+width = camera['width']
+height = camera['height']
+img = np.zeros(shape=(480, 640, 3), dtype=np.uint8)
+
+CameraServer.getInstance().startAutomaticCapture()
+
+input_stream = CameraServer.getInstance().getVideo()
+output_stream = CameraServer.getInstance().putVideo('Processed', width, height)
 
 # Wait until we got the NetworkTable Connection completed here
 with cond:
@@ -220,7 +236,10 @@ x.putBoolean("QuickTurn", _quickturn)
 #print("Initial Left-Right [-1 to 1]: ", lr)
 
 while True:
-    ret, frame = camera.read()
+#    ret, frame = camera.read()
+    # getting frame from the cameraserver
+    frame_time, frame = input_stream.grabFrame(img)
+    # output_img = np.copy(frame)
 
     redline, red_contourarea = dupImageByColor(frame, _red_hue, _red_sat, _red_val, (50, 50), "Red")
     blueline, blue_contourarea = dupImageByColor(frame, _blue_hue, _blue_sat, _blue_val, (50, 100), "Blue")
@@ -286,6 +305,8 @@ while True:
 
     # cv2.imshow("Mask", maskframe)
     ### cv2.imshow("Camera", frame)
+    # Now, put out the original frame that's marked up already
+    output_stream.putFrame(frame)
     #cv2.imshow("Final", line)
     #cv2.imshow("Red", redline)
     #cv2.imshow("Blue", blueline)
